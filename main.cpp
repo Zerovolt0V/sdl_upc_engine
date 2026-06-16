@@ -37,8 +37,8 @@ int main(int argc, char* argv[]) {
     GameObject* player = scene.createGameObject("Player");
     player->transform->x = 0.0f;
     player->transform->y = 0.0f;
-    player->transform->scaleX = 4.0f;
-    player->transform->scaleY = 4.0f;
+    player->transform->scaleX = 1.0f;
+    player->transform->scaleY = 1.0f;
 
     SpriteRenderer* playerSprite = player->addComponent<SpriteRenderer>("assets/personaje.png");
 
