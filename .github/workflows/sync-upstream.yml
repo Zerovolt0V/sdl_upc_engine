@@ -1,0 +1,31 @@
+name: Sincronizar con upstream (repo del profe)
+
+# Mantiene la rama main de este fork al dia con MoisesUPC/sdl_upc_engine.
+# Asi tus companeros solo hacen pull de este fork y reciben los cambios del profe.
+
+on:
+  schedule:
+    - cron: '0 12 * * *'   # cada dia ~07:00 hora Peru (12:00 UTC)
+  workflow_dispatch: {}     # ademas un boton manual en la pestana "Actions"
+
+permissions:
+  contents: write           # el Action necesita poder hacer push a main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar el fork (rama main)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Traer y fusionar los cambios del profe
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/MoisesUPC/sdl_upc_engine.git
+          git fetch upstream
+          git merge upstream/main --no-edit
+          git push origin main
