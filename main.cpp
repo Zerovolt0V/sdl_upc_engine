@@ -7,7 +7,8 @@
 #include "engine/SpriteAnimator.h"
 #include "engine/Transform.h"
 #include "engine/Camera.h"
-#include "engine/FollowCamera.h"
+
+#include "game/PlayerController.h"
 
 int main(int argc, char* argv[]) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -15,7 +16,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    SDL_Window* window = SDL_CreateWindow("Mi Motor SDL3", 1280, 720, 0);
+    SDL_Window* window = SDL_CreateWindow("StarShooter", 1280, 720, 0);
     if (!window) {
         SDL_Log("Error al crear la ventana: %s", SDL_GetError());
         SDL_Quit();
@@ -32,46 +33,49 @@ int main(int argc, char* argv[]) {
 
     Scene scene(renderer);
 
-    // ---- Personaje animado ----
-    // Spritesheet 256x160, frames de 32x32  =>  8 columnas y 5 filas (celdas 0..39).
-    GameObject* player = scene.createGameObject("Player");
-    player->transform->x = 0.0f;
-    player->transform->y = 0.0f;
-    player->transform->scaleX = 1.0f;
-    player->transform->scaleY = 1.0f;
-
-    SpriteRenderer* playerSprite = player->addComponent<SpriteRenderer>("assets/personaje.png");
-
-    SpriteAnimator* anim = player->addComponent<SpriteAnimator>(32, 32, 8);
-    anim->addAnimation("idle", {0, 1, 2, 3}, 6.0f);             // fila 0
-    anim->addAnimation("walk", {8, 9, 10, 11, 12, 13, 14, 15}, 10.0f);  // fila 1
-
-    // ---- Direccion inicial ----
-    // Se asume que el arte esta dibujado mirando a la DERECHA.
-    // Cambia a true si quieres que el personaje arranque mirando a la izquierda.
-    bool facingLeft = true;
-    playerSprite->flipX = facingLeft;
-    anim->play("idle");
-
-    // ---- NPC quieto de referencia (mismo spritesheet, sale de cache) ----
-    GameObject* npc = scene.createGameObject("NPC");
-    npc->transform->x = 300.0f;
-    npc->transform->scaleX = 4.0f;
-    npc->transform->scaleY = 4.0f;
-    SpriteRenderer* npcSprite = npc->addComponent<SpriteRenderer>("assets/personaje.png");
-    npcSprite->setSourceRect(0, 0, 32, 32);
-
-    // ---- Camara que sigue al player con zona muerta ----
+    // ---- Camara estatica (en un shmup no sigue a nadie; queda en (0,0)) ----
+    // Con la camara en el origen, el punto (0,0) del mundo cae en el CENTRO de la
+    // pantalla. Asi el playfield queda centrado y mas adelante podemos usar zoom.
     GameObject* camara = scene.createGameObject("MainCamera");
     camara->addComponent<Camera>();
-    FollowCamera* follow = camara->addComponent<FollowCamera>();
-    follow->setTarget(player);
-    follow->deadZoneWidth  = 200.0f;
-    follow->deadZoneHeight = 150.0f;
-    follow->smoothSpeed    = 5.0f;
+
+    // ---- Fondo placeholder (se reemplazara por el scroll vertical por capas) ----
+    // Se crea PRIMERO para que quede detras de todo (el render no ordena por capas).
+    GameObject* bg = scene.createGameObject("Background");
+    bg->transform->x = -640.0f; // esquina sup-izq de la vista (camara en (0,0))
+    bg->transform->y = -360.0f;
+    bg->transform->scaleX = 1280.0f / 320.0f; // estira la imagen de 320x320 a la ventana
+    bg->transform->scaleY = 720.0f / 320.0f;
+    bg->addComponent<SpriteRenderer>("assets/space_bg.png");
+
+    // ---- Llama del motor (animada). Se crea ANTES que el player para quedar detras. ----
+    GameObject* exhaust = scene.createGameObject("Exhaust");
+    exhaust->transform->scaleX = 1.5f;
+    exhaust->transform->scaleY = 1.5f;
+    exhaust->addComponent<SpriteRenderer>("assets/exhaust.png");
+    SpriteAnimator* exAnim = exhaust->addComponent<SpriteAnimator>(32, 32, 4); // 128x128 => 4x4
+    exAnim->addAnimation("thrust", {0, 1, 2, 3}, 12.0f);
+    exAnim->play("thrust");
+
+    // ---- Player ----
+    GameObject* player = scene.createGameObject("Player");
+    player->transform->scaleX = 1.5f;
+    player->transform->scaleY = 1.5f;
+
+    // OJO: el SpriteRenderer va ANTES del PlayerController (este lo busca en awake()).
+    SpriteRenderer* playerSprite = player->addComponent<SpriteRenderer>("assets/player.png");
+    // Elegimos UNA nave del sheet 4x4 de 64x64. Fila 0, columna 2 = nave azul.
+    // Para cambiarla: setSourceRect(col*64, fila*64, 64, 64).
+    playerSprite->setSourceRect(2 * 64.0f, 0 * 64.0f, 64.0f, 64.0f);
+
+    // Posicion inicial: centrado horizontalmente y hacia la parte baja.
+    player->transform->x = -(64.0f * player->transform->scaleX) * 0.5f;
+    player->transform->y = 200.0f;
+
+    PlayerController* pc = player->addComponent<PlayerController>();
+    pc->setExhaust(exhaust);
 
     // ---- Bucle principal ----
-    const float SPEED = 200.0f; // velocidad del player en px/seg
     bool running = true;
     Uint64 lastTime = SDL_GetTicks();
 
@@ -83,34 +87,13 @@ int main(int argc, char* argv[]) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) running = false;
+            if (event.type == SDL_EVENT_KEY_DOWN &&
+                event.key.scancode == SDL_SCANCODE_ESCAPE) running = false;
         }
-
-        // ---- Teclado: estado actual de todas las teclas (SDL3 => const bool*) ----
-        const bool* keys = SDL_GetKeyboardState(nullptr);
-
-        float moveX = 0.0f;
-        float moveY = 0.0f;
-        if (keys[SDL_SCANCODE_LEFT])  moveX -= 1.0f;
-        if (keys[SDL_SCANCODE_RIGHT]) moveX += 1.0f;
-        if (keys[SDL_SCANCODE_UP])    moveY -= 1.0f;
-        if (keys[SDL_SCANCODE_DOWN])  moveY += 1.0f;
-
-        // Mover al personaje
-        player->transform->x += moveX * SPEED * dt;
-        player->transform->y += moveY * SPEED * dt;
-
-        // Flip segun hacia donde camina (solo cambia si hay movimiento horizontal)
-        if      (moveX < 0.0f) facingLeft = false;
-        else if (moveX > 0.0f) facingLeft = true;
-        playerSprite->flipX = facingLeft;
-
-        // Animacion: caminar si se mueve, quieto si no
-        bool moving = (moveX != 0.0f || moveY != 0.0f);
-        anim->play(moving ? "walk" : "idle");
 
         scene.update(dt);
 
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         scene.render();
         SDL_RenderPresent(renderer);

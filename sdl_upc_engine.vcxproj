@@ -24,9 +24,27 @@
     <ClCompile Include="engine\FollowCamera.cpp" />
     <ClCompile Include="engine\SpriteAnimator.cpp" />
     <ClCompile Include="engine\SpriteRenderer.cpp" />
+    <ClCompile Include="game\PlayerController.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Asteroids-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Background_Full-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Background_Nebula-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Background_Nebula-0002.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Background_SmallStars-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Background_Space-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Background_Stars-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Barrier-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Bonuses-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Bullets-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Exhaust-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Explosion-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\Mine-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\SpaceShips_Enemy-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\SpaceShips_Player-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\SpaceShip_Boss-0001.png" />
+    <Image Include="assets\assetsSpace\PIXELART\Shoot`em Up\UI_sprites-0001.png" />
     <Image Include="assets\bg.png" />
     <Image Include="assets\cuadrado.png" />
     <Image Include="assets\nave.png" />
@@ -46,6 +64,7 @@
     <ClInclude Include="engine\SpriteAnimator.h" />
     <ClInclude Include="engine\SpriteRenderer.h" />
     <ClInclude Include="engine\Transform.h" />
+    <ClInclude Include="game\PlayerController.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
