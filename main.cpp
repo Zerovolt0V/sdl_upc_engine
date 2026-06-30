@@ -8,20 +8,21 @@
 #include "game/Platformer.h"
 #include "game/TopDown.h"
 #include "game/Shooter.h"
+#include "game/StarShooter.h"
 
 int main(int argc, char* argv[]) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("Error al inicializar SDL: %s", SDL_GetError());
         return 1;
     }
-    SDL_Window* window = SDL_CreateWindow("Ejemplo 1: Platformer  (1/2/3 cambia, F1 debug)", 1280, 720, 0);
+    SDL_Window* window = SDL_CreateWindow("StarShooter  (1/2/3/4 cambia, F1 debug)", 720, 960, 0);
     if (!window) { SDL_Quit(); return 1; }
     SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
     if (!renderer) { SDL_DestroyWindow(window); SDL_Quit(); return 1; }
 
     auto scene = std::make_unique<Scene>(renderer);
-    buildPlatformer(*scene);
-    int current = 1;
+    buildStarShooter(*scene);
+    int current = 4;
 
     bool running = true;
     Uint64 lastTime = SDL_GetTicks();
@@ -42,13 +43,19 @@ int main(int argc, char* argv[]) {
                 if (event.key.scancode == SDL_SCANCODE_1) sel = 1;
                 if (event.key.scancode == SDL_SCANCODE_2) sel = 2;
                 if (event.key.scancode == SDL_SCANCODE_3) sel = 3;
+                if (event.key.scancode == SDL_SCANCODE_4) sel = 4;
 
                 if (sel != 0 && sel != current) {
                     current = sel;
+                    // StarShooter usa ventana vertical (retrato); los ejemplos, apaisada.
+                    // La camara lee el tamano real del render, asi que todo se adapta solo.
+                    if (sel == 4) SDL_SetWindowSize(window, 720, 960);
+                    else          SDL_SetWindowSize(window, 1280, 720);
                     scene = std::make_unique<Scene>(renderer);
-                    if (sel == 1) { buildPlatformer(*scene); SDL_SetWindowTitle(window, "Ejemplo 1: Platformer  (1/2/3 cambia, F1 debug)"); }
-                    if (sel == 2) { buildTopDown(*scene);    SDL_SetWindowTitle(window, "Ejemplo 2: Top-down  (1/2/3 cambia, F1 debug)"); }
-                    if (sel == 3) { buildShooter(*scene);    SDL_SetWindowTitle(window, "Ejemplo 3: Shooter  (1/2/3 cambia, F1 debug)"); }
+                    if (sel == 1) { buildPlatformer(*scene);  SDL_SetWindowTitle(window, "Ejemplo 1: Platformer  (1/2/3/4 cambia, F1 debug)"); }
+                    if (sel == 2) { buildTopDown(*scene);     SDL_SetWindowTitle(window, "Ejemplo 2: Top-down  (1/2/3/4 cambia, F1 debug)"); }
+                    if (sel == 3) { buildShooter(*scene);     SDL_SetWindowTitle(window, "Ejemplo 3: Shooter  (1/2/3/4 cambia, F1 debug)"); }
+                    if (sel == 4) { buildStarShooter(*scene); SDL_SetWindowTitle(window, "StarShooter  (1/2/3/4 cambia, F1 debug)"); }
                 }
             }
         }

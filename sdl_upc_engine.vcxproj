@@ -30,6 +30,8 @@
     <ClCompile Include="engine\TilemapRenderer.cpp" />
     <ClCompile Include="game\Platformer.cpp" />
     <ClCompile Include="game\Shooter.cpp" />
+    <ClCompile Include="game\StarShooter.cpp" />
+    <ClCompile Include="game\star\Player.cpp" />
     <ClCompile Include="game\TopDown.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -50,6 +52,8 @@
     <ClInclude Include="engine\Transform.h" />
     <ClInclude Include="game\Platformer.h" />
     <ClInclude Include="game\Shooter.h" />
+    <ClInclude Include="game\StarShooter.h" />
+    <ClInclude Include="game\star\Player.h" />
     <ClInclude Include="game\TopDown.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -76,7 +80,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
