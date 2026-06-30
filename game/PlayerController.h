@@ -44,10 +44,16 @@ public:
 
     // ---- Getters para el HUD ----
     int  getHearts()      const { return hearts; }
+    int  getMaxHearts()   const { return maxHearts; }
     int  getLives()       const { return lives; }
     int  getBombs()       const { return bombs; }
+    int  getMaxBombs()    const { return maxBombs; }
     bool isShielded()     const { return shieldTimer > 0.0f; }
     bool isInvulnerable() const;
+    float getShieldTimeLeft() const { return shieldTimer > 0.0f ? shieldTimer : 0.0f; }
+    float getShieldDuration() const { return shieldDuration; }
+    float getCollisionWidth() const { return frameW * baseScaleX; }
+    float getCollisionHeight() const { return frameH * baseScaleY; }
 
     // La llama del motor es otro GameObject; main lo registra para sincronizarlo.
     void setExhaust(GameObject* e) { exhaust = e; }

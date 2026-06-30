@@ -1,6 +1,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+#include <string>
+
 #include "engine/Scene.h"
 #include "engine/GameObject.h"
 #include "engine/SpriteRenderer.h"
@@ -9,6 +11,7 @@
 #include "engine/Camera.h"
 
 #include "game/PlayerController.h"
+#include "game/PowerUpSystem.h"
 
 int main(int argc, char* argv[]) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -32,6 +35,7 @@ int main(int argc, char* argv[]) {
     }
 
     Scene scene(renderer);
+    const char* shootAssets = "assets/Shoot`em Up/";
 
     // ---- Camara estatica (en un shmup no sigue a nadie; queda en (0,0)) ----
     // Con la camara en el origen, el punto (0,0) del mundo cae en el CENTRO de la
@@ -46,13 +50,13 @@ int main(int argc, char* argv[]) {
     bg->transform->y = -360.0f;
     bg->transform->scaleX = 1280.0f / 320.0f; // estira la imagen de 320x320 a la ventana
     bg->transform->scaleY = 720.0f / 320.0f;
-    bg->addComponent<SpriteRenderer>("assets/space_bg.png");
+    bg->addComponent<SpriteRenderer>(std::string(shootAssets) + "Background_Full-0001.png");
 
     // ---- Llama del motor (animada). Se crea ANTES que el player para quedar detras. ----
     GameObject* exhaust = scene.createGameObject("Exhaust");
     exhaust->transform->scaleX = 1.5f;
     exhaust->transform->scaleY = 1.5f;
-    exhaust->addComponent<SpriteRenderer>("assets/exhaust.png");
+    exhaust->addComponent<SpriteRenderer>(std::string(shootAssets) + "Exhaust-0001.png");
     SpriteAnimator* exAnim = exhaust->addComponent<SpriteAnimator>(32, 32, 4); // 128x128 => 4x4
     exAnim->addAnimation("thrust", {0, 1, 2, 3}, 12.0f);
     exAnim->play("thrust");
@@ -63,7 +67,7 @@ int main(int argc, char* argv[]) {
     player->transform->scaleY = 1.5f;
 
     // OJO: el SpriteRenderer va ANTES del PlayerController (este lo busca en awake()).
-    SpriteRenderer* playerSprite = player->addComponent<SpriteRenderer>("assets/player.png");
+    SpriteRenderer* playerSprite = player->addComponent<SpriteRenderer>(std::string(shootAssets) + "SpaceShips_Player-0001.png");
     // Elegimos UNA nave del sheet 4x4 de 64x64. Fila 0, columna 2 = nave azul.
     // Para cambiarla: setSourceRect(col*64, fila*64, 64, 64).
     playerSprite->setSourceRect(2 * 64.0f, 0 * 64.0f, 64.0f, 64.0f);
@@ -74,6 +78,17 @@ int main(int argc, char* argv[]) {
 
     PlayerController* pc = player->addComponent<PlayerController>();
     pc->setExhaust(exhaust);
+
+    // ---- Escudo visual, powerups y HUD ----
+    GameObject* shieldFx = scene.createGameObject("ShieldFx");
+    shieldFx->addComponent<SpriteRenderer>(std::string(shootAssets) + "Barrier-0001.png");
+    shieldFx->addComponent<ShieldVisual>(pc);
+
+    GameObject* powerUps = scene.createGameObject("PowerUpDirector");
+    powerUps->addComponent<PowerUpDirector>(pc);
+
+    GameObject* hud = scene.createGameObject("PowerUpHUD");
+    hud->addComponent<PowerUpHUD>(pc);
 
     // ---- Bucle principal ----
     bool running = true;
