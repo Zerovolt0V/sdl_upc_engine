@@ -53,6 +53,7 @@
     <ClInclude Include="game\Platformer.h" />
     <ClInclude Include="game\Shooter.h" />
     <ClInclude Include="game\StarShooter.h" />
+    <ClInclude Include="game\star\Hitbox.h" />
     <ClInclude Include="game\star\Player.h" />
     <ClInclude Include="game\TopDown.h" />
   </ItemGroup>
