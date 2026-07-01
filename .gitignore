@@ -6,6 +6,8 @@
 # --- Documentacion / contexto: NO se sube (solo el motor, no los prompts) ---
 *.md
 !README.md
+# guia de equipo (enemigos/boss): SI se sube
+!game/star/GUIA_ENEMIGOS.md
 # Si en el futuro quieres subir uno publico, descomenta y ajusta:
 # !README.md
 
