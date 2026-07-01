@@ -45,7 +45,12 @@ public:
     std::function<void(Hitbox* self, Hitbox* other)> onHit;
 
     void update(float) override {
-        // Si el dueño murió, este hitbox se va con él (evita punteros colgantes).
+        // Hitbox propio (owner = el mismo objeto, p.ej. una bala): no sigue a nadie,
+        // el objeto se mueve solo (con su RigidBody2D). No hay nada que sincronizar.
+        if (owner == gameObject) return;
+
+        // Si el dueño (otro objeto) murió, este hitbox se va con él (evita
+        // punteros colgantes a un dueño que ya no existe).
         if (!owner || !owner->alive) {
             gameObject->scene->destroy(gameObject);
             return;

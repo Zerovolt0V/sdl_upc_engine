@@ -11,12 +11,24 @@
 #include "../../engine/Camera.h"
 
 #include "Hitbox.h"
+#include "Projectiles.h"
+#include "Exhaust.h"
 
 Player* Player::spawn(Scene& scene, float x, float y) {
+    // Tamaño de la nave. Los hitboxes, tubos, clamp y cañón se midieron a escala 1.5,
+    // así que todo se escala por k = SCALE/1.5 y queda consistente al cambiar el tamaño.
+    const float SCALE = 1.25f;
+    const float k = SCALE / 1.5f;
+
+    // Fuegos de motor PRIMERO: al crearse antes que la nave, se dibujan DETRÁS de
+    // ella (el engine pinta en orden de creación). Se enganchan más abajo.
+    GameObject* fireL = createExhaust(scene, FlameColor::Azul, k, false);
+    GameObject* fireR = createExhaust(scene, FlameColor::Azul, k, false);
+
     GameObject* go = scene.createGameObject("Player");
     go->transform->x = x;
     go->transform->y = y;
-    go->transform->scaleX = go->transform->scaleY = 1.5f; // 64px -> 96px en pantalla
+    go->transform->scaleX = go->transform->scaleY = SCALE;
 
     // El sheet SpaceShips_Player es una grilla 4x4 de celdas de 64x64.
     // Tomamos el caza azul (fila 0, columna 2). La nave ya apunta hacia arriba.
@@ -24,17 +36,29 @@ Player* Player::spawn(Scene& scene, float x, float y) {
     sr->setSourceRect(128.0f, 0.0f, 64.0f, 64.0f);
 
     auto player = go->addComponent<Player>();
+    player->halfSize *= k; // clamp proporcional al tamaño
+    player->muzzleY  *= k; // el cañón (morro) también escala
+
+    // Al ser golpeado por el CUERPO de un enemigo o por una bala enemiga, el
+    // jugador pierde una vida. (Los powerups se conectarán en el paso 9.)
+    auto onBody = [player](Hitbox* /*self*/, Hitbox* other) {
+        if (other->faction == Faction::Enemy &&
+            (other->kind == HitboxKind::Body || other->kind == HitboxKind::EnemyBullet))
+            player->takeDamage(1);
+    };
 
     // Hitboxes del cuerpo en cruz: uno vertical (fuselaje) y uno horizontal (alas).
     // Cubren mejor la silueta que un solo cuadro. Son del bando Player, tipo Body.
-    // El efecto al recibir daño se conectará en el paso 5 (por ahora solo existen
-    // para verlos con F1).
     //
     // Medido sobre el sprite: la nave NO está en el centro de su celda 64x64, sino
     // ~15px más abajo (en mundo, con escala 1.5). Por eso centramos la cruz en
     // offsetY=+15. La silueta real mide ~58x61 px en mundo.
-    addHitbox(scene, go,  0.0f, 15.0f, 22.0f, 56.0f, Faction::Player, HitboxKind::Body); // fuselaje
-    addHitbox(scene, go,  0.0f, 11.0f, 56.0f, 22.0f, Faction::Player, HitboxKind::Body); // alas
+    addHitbox(scene, go, 0.0f, 15.0f*k, 22.0f*k, 56.0f*k, Faction::Player, HitboxKind::Body, onBody); // fuselaje
+    addHitbox(scene, go, 0.0f, 11.0f*k, 56.0f*k, 22.0f*k, Faction::Player, HitboxKind::Body, onBody); // alas
+
+    // Enganchar los fuegos a los dos tubos del sprite (medidos a escala 1.5, escalados por k).
+    attachExhaust(fireL, go, -8.25f*k, 50.0f*k);
+    attachExhaust(fireR, go,  7.0f*k, 50.0f*k);
 
     return player;
 }
@@ -42,6 +66,19 @@ Player* Player::spawn(Scene& scene, float x, float y) {
 void Player::update(float dt) {
     const bool* keys = SDL_GetKeyboardState(nullptr);
     Transform* t = gameObject->transform;
+
+    // i-frames: baja el contador de invulnerabilidad mientras esté activo.
+    if (invulnTimer > 0.0f) invulnTimer -= dt;
+
+    // Viajar con la cámara: seguimos su desplazamiento para quedar FIJOS en pantalla
+    // cuando no se presiona nada. Sin esto, el mundo scrollea y la nave "se iría"
+    // hacia abajo. Usar el delta de la cámara funciona aunque el scroll cambie.
+    if (Camera* cam = gameObject->scene->getActiveCamera()) {
+        float camY = cam->gameObject->transform->y;
+        if (camTracked) t->y += camY - lastCamY;
+        lastCamY = camY;
+        camTracked = true;
+    }
 
     // Dirección de movimiento a partir de las flechas (Y crece hacia abajo).
     float mx = 0.0f, my = 0.0f;
@@ -70,7 +107,31 @@ void Player::update(float dt) {
     float k = std::min(1.0f, tiltSpeed * dt);
     t->rotation += (targetRot - t->rotation) * k;
 
+    // Disparo con Z y cooldown: mantener Z presionado dispara cada shootCooldown
+    // segundos (el timer baja con dt y se reinicia al disparar).
+    shootTimer -= dt;
+    if (keys[SDL_SCANCODE_Z] && shootTimer <= 0.0f) {
+        shoot();
+        shootTimer = shootCooldown;
+    }
+
     clampToView();
+}
+
+void Player::shoot() {
+    Transform* t = gameObject->transform;
+    // Sale desde el "cañón" (centro + muzzle) hacia arriba a bulletSpeed.
+    createBullet(*gameObject->scene, Faction::Player, BulletVisual::AzulBolt,
+                 t->x + muzzleX, t->y + muzzleY,
+                 0.0f, -bulletSpeed, bulletScale);
+}
+
+void Player::takeDamage(int dmg) {
+    if (invulnTimer > 0.0f) return; // invulnerable: ignora el golpe
+    lives -= dmg;
+    if (lives < 0) lives = 0;
+    invulnTimer = invulnTime;
+    SDL_Log("Player golpeado! vidas restantes = %d", lives);
 }
 
 void Player::clampToView() {
