@@ -14,7 +14,7 @@ public:
     float tiltMaxDeg    = 8.0f;  // inclinación máxima al ir a los lados (grados)
     float tiltSpeed     = 12.0f;  // qué tan rápido alcanza/regresa la inclinación
     float halfSize      = 48.0f;  // medio tamaño visual de la nave (para el clamp)
-    float shootCooldown = 0.2f;   // segundos entre disparos (GDD)
+    float shootCooldown = 0.35f;   // segundos entre disparos (GDD)
     float bulletSpeed   = 1700.0f; // velocidad de la bala (px/s, hacia arriba)
     float bulletScale   = 1.2f;   // tamaño de la bala
     float muzzleX       = 0.0f;   // cañón: offset en X desde el centro de la nave
