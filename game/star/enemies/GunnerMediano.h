@@ -2,7 +2,7 @@
 #include "../Enemy.h"
 #include "../Paths.h"
 
-// ROSA / Mediano — Artillero pesado con 2 CAÑONES gemelos. 2 vidas.
+// ROSA / Mediano — Artillero pesado con 2 CAÑONES gemelos. 3 vidas.
 class GunnerMediano : public Enemy {
 public:
     enum Move { AlternateStrafe, CrossFire, TwinSpiral, StrafeAcrossR, StrafeAcrossL };
@@ -78,7 +78,7 @@ public:
 
     static Enemy* spawn(Scene& s, float x, float y, GameObject* t, Move move = AlternateStrafe) {
         EnemyDef d;
-        d.srcX=150; d.srcY=201; d.srcW=32; d.srcH=20; d.lives=2; d.scale=2.2f; d.speed=90.f;
+        d.srcX=150; d.srcY=201; d.srcW=32; d.srcH=20; d.lives=3; d.scale=2.2f; d.speed=90.f;
         d.fireInterval = 1.0f;
         d.bulletSpeed  = 210.f;
         d.muzzles = { {-4.f, 8.f}, {4.f, 8.f} }; // dos bocas gemelas al frente

@@ -1,7 +1,8 @@
 #pragma once
+#include <cmath>
 #include "../Enemy.h"
 
-// ROJO / Mediano — Horda PESADA. No dispara: su cuerpo es la amenaza (2 vidas).
+// ROJO / Mediano — Horda PESADA. No dispara: su cuerpo es la amenaza (3 vidas).
 // Todas las variantes son puro movimiento, más lento y deliberado que el pequeño.
 class HordeMediano : public Enemy {
 public:
@@ -48,15 +49,33 @@ public:
             spin(160.f, dt);
             break;
 
-        case Stalker: // se planta y se ARRASTRA lento hacia tu columna (te acosa), luego sale
+        case Stalker: // repta apuntándote, PREDICE tu movimiento y se LANZA adelantado
             switch (phase) {
-            case 0: advance(dt); if (depthOnScreen() > -140.f) nextPhase(); break;
-            case 1:
-                holdOnScreen(dt);
-                driftTo(playerX(), gameObject->transform->y, 1.4f, dt); // reptar hacia ti (más ágil)
-                if (tPhase > 4.0f) nextPhase();
+            case 0:
+                advance(dt); faceTarget();
+                prevPX = playerX(); // listo para estimar tu velocidad al empezar a acechar
+                if (depthOnScreen() > -140.f) nextPhase();
                 break;
-            default: gameObject->transform->y += speed * 1.9f * dt; break; // sale con presión
+            case 1: {
+                holdOnScreen(dt);
+                driftTo(playerX(), gameObject->transform->y, 1.4f, dt); // reptar hacia tu columna
+                faceTarget();                                           // te encara mientras acecha
+                float px = playerX();                                   // estima tu velocidad en X (suavizada)
+                if (dt > 0.f) { float inst = (px - prevPX) / dt; playerVx += (inst - playerVx) * 0.15f; }
+                prevPX = px;
+                if (tPhase > 2.8f) {                                    // fija el rumbo ADELANTADO hacia ti
+                    float lead = playerVx * 0.4f;                       // 0.4 s de anticipación
+                    if (lead >  220.f) lead =  220.f;
+                    if (lead < -220.f) lead = -220.f;
+                    Transform* t = gameObject->transform;
+                    float ty = target ? target->transform->y : t->y;
+                    lungeAng = std::atan2(ty - t->y, (px + lead) - t->x) * 57.2957795f;
+                    t->rotation = lungeAng - 90.f;                      // encara el punto predicho
+                    nextPhase();
+                }
+                break;
+            }
+            default: retreat(lungeAng, speed * 3.6f, dt); break; // embestida rápida (rumbo fijo, esquivable)
             }
             break;
 
@@ -69,8 +88,13 @@ public:
 
     static Enemy* spawn(Scene& s, float x, float y, GameObject* t, Move move = Charger) {
         EnemyDef d;
-        d.srcX=150; d.srcY=25; d.srcW=32; d.srcH=20; d.lives=2; d.scale=2.0f; d.speed=110.f;
+        d.srcX=150; d.srcY=25; d.srcW=32; d.srcH=20; d.lives=3; d.scale=2.0f; d.speed=110.f;
         d.variant = (int)move;
         return makeEnemy<HordeMediano>(s, x, y, t, d);
     }
+
+private:
+    float lungeAng = 90.f;  // rumbo fijado (adelantado) para la embestida del Stalker
+    float prevPX   = 0.f;   // X del jugador el frame anterior (para estimar su velocidad)
+    float playerVx = 0.f;   // velocidad horizontal del jugador, suavizada
 };

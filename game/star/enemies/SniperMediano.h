@@ -1,7 +1,7 @@
 #pragma once
 #include "../Enemy.h"
 
-// AMARILLO / Mediano — Francotirador elite con 2 cañones. 2 vidas.
+// AMARILLO / Mediano — Francotirador elite con 2 cañones. 3 vidas.
 class SniperMediano : public Enemy {
 public:
     enum Move { Hunter, Suppressor, Marksman, StrafeSnipeR, StrafeSnipeL };
@@ -84,7 +84,7 @@ public:
 
     static Enemy* spawn(Scene& s, float x, float y, GameObject* t, Move move = Hunter) {
         EnemyDef d;
-        d.srcX=150; d.srcY=114; d.srcW=32; d.srcH=20; d.lives=2; d.scale=2.2f; d.speed=100.f;
+        d.srcX=150; d.srcY=114; d.srcW=32; d.srcH=20; d.lives=3; d.scale=2.2f; d.speed=100.f;
         d.fireInterval = 1.0f;
         d.bulletSpeed  = 210.f;
         d.muzzles = { {-4.f, 8.f}, {4.f, 8.f} };
