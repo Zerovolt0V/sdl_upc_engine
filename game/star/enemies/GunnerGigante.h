@@ -13,7 +13,7 @@ public:
     }
     static Enemy* spawn(Scene& s, float x, float y, GameObject* t) {
         EnemyDef d;
-        d.srcX=33; d.srcY=187; d.srcW=47; d.srcH=53; d.lives=7; d.scale=1.9f; d.speed=60.f;
+        d.srcX=33; d.srcY=187; d.srcW=47; d.srcH=53; d.lives=8; d.scale=1.9f; d.speed=60.f;
         d.muzzles = { {-16.f, 21.f}, {0.f, 26.f}, {16.f, 21.f} }; // izq, centro, der (px de sprite)
         return makeEnemy<GunnerGigante>(s, x, y, t, d);
     }

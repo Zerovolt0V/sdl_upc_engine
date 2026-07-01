@@ -10,7 +10,7 @@ public:
     }
     static Enemy* spawn(Scene& s, float x, float y, GameObject* t) {
         EnemyDef d;
-        d.srcX=92; d.srcY=193; d.srcW=45; d.srcH=36; d.lives=3; d.scale=1.8f; d.speed=85.f;
+        d.srcX=92; d.srcY=193; d.srcW=45; d.srcH=36; d.lives=5; d.scale=1.8f; d.speed=85.f;
         return makeEnemy<GunnerGrande>(s, x, y, t, d);
     }
 };
